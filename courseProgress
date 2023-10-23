@@ -1,0 +1,108 @@
+function display_course_progress() {
+    // Replace the ****** with the absolute server path to the UserProgress class file within the Wordpress 
+    // Memberpress files structure in the Courses Add-on
+    $user_progress_file = '*********/wp-content/plugins/memberpress-courses/app/models/UserProgress.php';
+
+    // Check if the file exists before including it
+    if (file_exists($user_progress_file)) {
+        require_once $user_progress_file;
+
+        // Replace 1234 with the course ID you want to display progress for in the dashbaord
+        // The course ID can be found in the url when editing the course within Memberpress
+        $course_id = 1234;
+
+        // Fetch all users who have progress in the course
+        $user_ids = \memberpress\courses\models\UserProgress::find_all_course_participants($course_id);
+
+        // Count the total number of users and users who have completed all lessons
+        $total_users = count($user_ids);
+        $completed_users = 0;
+
+        // below is the css styles of the bars on the dashboard widget
+
+        if (!empty($user_ids)) {
+            echo '<style>
+                .progress-bar {
+                    background-color: #007bff;
+                    height: 10px; /* Add height to the progress bar */
+                }
+                .user-progress {
+                    border-bottom: 1px dashed #ccc;
+                    padding-bottom: 10px;
+                    margin-bottom: 10px;
+                }
+                .completed {
+                    background-color: #28a745; /* Green color for 100% completion */
+                }
+				.totals {
+				background-color: #1D4868;
+				color: #fff;
+				padding: 2px 2px 2px 5px;
+				}
+            </style>';
+            echo '<h2>Course Progress for All Users:</h2>';  
+
+            foreach ($user_ids as $user_id) {
+                // If you need to exclude any users from the dashbaord list replace the usernames below
+                // Exclude users with usernames "username1" and "username2"
+                $user_info = get_userdata($user_id);
+                $excluded_usernames = ['username1', 'username2'];
+                if ($user_info && in_array($user_info->user_login, $excluded_usernames)) {
+                    continue;
+                }
+
+                $user_progress_array = \memberpress\courses\models\UserProgress::find_all_by_user_and_course($user_id, $course_id);
+
+                if (!empty($user_progress_array)) {
+                    // Get the user's display name
+                    $user_display_name = $user_info ? $user_info->display_name : 'User';
+
+                    $completed_lessons = count($user_progress_array);
+                    $total_lessons = 19; // Replace with the total number of lessons in the course
+
+                    // Check if the user has completed all lessons
+                    if ($completed_lessons === $total_lessons) {
+                        // Increment the completed users count
+                        $completed_users++;
+                    }
+
+                    // Calculate the progress percentage
+                    $progress_percentage = ($completed_lessons / $total_lessons) * 100;
+
+                    // Add the "completed" class to the progress bar if progress is 100%
+                    $progress_class = ($progress_percentage == 100) ? 'completed' : '';
+
+                    // Display the user's progress visually with a progress bar
+                    // colours of the bar are adjusted in lines 23-29
+                    echo '<div class="user-progress">';
+                    echo '<p>' . $user_display_name . ' - ' . $completed_lessons . ' of ' . $total_lessons . ' lessons completed</p>';
+                    echo '<div class="progress">';
+                    echo '<div class="progress-bar ' . $progress_class . '" role="progressbar" style="width: ' . $progress_percentage . '%;" aria-valuenow="' . $progress_percentage . '" aria-valuemin="0" aria-valuemax="100"></div>';
+                    echo '</div>';
+                    echo '</div>';
+                }
+            }
+
+            // Display the total number of users and completed users in an area at the bottom of the dashboard
+            echo '<div class="totals">';
+            echo '<p class="totals">Total Users: ' . $total_users . '</p>';
+            echo '<p>Users Completed  - (' . $total_lessons .' of ' . $total_lessons .") lessons: " . $completed_users . '</p>';
+			echo '</div>';
+        } else {
+            echo 'No users are enrolled in this course or have no progress.';
+        }
+    } else {
+        echo 'UserProgress class file not found.';
+    }
+}
+
+// Add the Memberpress custom dashboard widget to the dashboard
+function custom_dashboard_widget() {
+    wp_add_dashboard_widget(
+        'course_progress_widget',
+        // Change below for the widget title 
+        'Change the text here for the widget title',
+        'display_course_progress'
+    );
+}
+add_action('wp_dashboard_setup', 'custom_dashboard_widget');
