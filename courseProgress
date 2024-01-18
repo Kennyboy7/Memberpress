@@ -1,6 +1,6 @@
 function display_course_progress() {
     // Replace with the absolute server path to the UserProgress class file
-    $user_progress_file = '/home/sites/24b/a/a6c059d035/public_html/wp-content/plugins/memberpress-courses/app/models/UserProgress.php';
+    $user_progress_file = 'PUT_THE_WHOLE_PATH_HERE/wp-content/plugins/memberpress-courses/app/models/UserProgress.php';
 
     // Check if the file exists before including it
     if (file_exists($user_progress_file)) {
