@@ -58,7 +58,8 @@ function display_course_progress() {
 
                 foreach ($user_ids as $user_id) {
                     $user_info = get_userdata($user_id);
-                    $excluded_usernames = ['k7', 'fitjiffa', 'fitjiffa@hotmail.com', 'EFTEmma'];
+			// Exclude usersname
+                    $excluded_usernames = ['k7321', 'xyz'];
                     if ($user_info && in_array($user_info->user_login, $excluded_usernames)) {
                         continue;
                     }
